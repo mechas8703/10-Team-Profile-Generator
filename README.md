@@ -1,4 +1,4 @@
-# 10 Object-Oriented Programming: Team Profile Generator
+# 10 Team Profile Generator
 
 ![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)
 ![GitHub license](https://img.shields.io/badge/made%20by-Maria%20Cardona-brightgreen)
