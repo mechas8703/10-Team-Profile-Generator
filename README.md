@@ -46,3 +46,9 @@ The user will be prompted for their GitHub username and other information.
 ## Repository
 
 - [Project Repo](https://github.com/mechas8703/10-Team-Profile-Generator)
+
+### App working example
+
+<!-- ![Git](video.gif) -->
+<!-- [Video Link](https://drive.google.com/file/d/1avhJrr5IlHLYr-3MqivEXg17pZmkCfiV/view) -->
+<!-- ![Foto1](foto1.png) -->
