@@ -1,0 +1,39 @@
+{
+    "name": "unit10hw",
+    "version": "1.0.0",
+    "description": "OOP and testing for week 10 homework",
+    "main": "app.js",
+    "directories": {
+      "lib": "lib",
+      "test": "test"
+    },
+    "scripts": {
+        "lint": "npm run lint:lwc && npm run lint:aura",
+        "lint:aura": "eslint **/aura/**",
+        "lint:lwc": "eslint **/lwc/**",
+        "test": "npm run test:unit",
+        "test:unit": "sfdx-lwc-jest",
+        "test:unit:watch": "sfdx-lwc-jest --watch",
+        "test:unit:debug": "sfdx-lwc-jest --debug",
+        "test:unit:coverage": "sfdx-lwc-jest --coverage",
+        "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
+        "prettier:verify": "prettier --list-different \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\""
+    
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/stevetrilogy/unit10hw.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+      "url": "https://github.com/stevetrilogy/unit10hw/issues"
+    },
+    "homepage": "https://github.com/stevetrilogy/unit10hw#readme",
+    "dependencies": {
+      "inquirer": "^6.5.2"
+    },
+    "devDependencies": {
+      "jest": "^24.8.0"
+    }
+  }
