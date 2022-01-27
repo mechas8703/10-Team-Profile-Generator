@@ -9,130 +9,227 @@ const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
+const { constants } = require("buffer");
+
+let hasManager = false;
 
 const teamMembers = [];
-const emptyId = [];
+const ids = [];
 
-const questionsEmployee = [
-    {
-        type: "input",
-        name: "nameManager",
-        message: "What is the manager's name?"
-    },
-    {
-        type: "input",
-        name: "managerId",
-        message: "What is the manager's ID?"
-    },
-    {
-        type: "input",
-        name: "emailManager",
-        message: "What is the manager's email?"
-    },
-    {
-        type: "input",
-        name: "officeNumber",
-        message: "What is the manager's office number?"
-    }
-];
+init();
 
-
-function manager() {
-    console.log("Let's build your team");
-    inquirer.prompt(questionsEmployee).then(function(data){
-        const manager = new Manager(data.nameManager, data.managerId, data.emailManager, data.officeNumber);
-        teamMembers.push(manager);
-        emptyId.push(data.managerId);
-        team();
-    });
-};
-
-function team() {
-    inquirer.prompt([
-        {
-            type: "list",
-            name: "memberChoice",
-            message: "Which type of member would you like to add?",
-            choices: [
-                "Engineer",
-                "Intern",
-                "I don't want to add any more team members"
-            ]
-        }
-    ]).then(function(data){
-        if (data.memberChoice === "Engineer"){
-            engineer();
-        } else if (data.memberChoice === "Intern"){
-            intern();
-        } else (outputTeam());
-    });
-};
-
-function engineer() {
-    inquirer.prompt([
-        {
-            type: "input",
-            name:"engineerName",
-            message: "What is the engineer's name?"
-        },
-        {
-            type: "input",
-            name:"engineerId",
-            message: "What is the engineer's ID?"
-        },
-        {
-            type: "input",
-            name: "engineerEmail",
-            message: "What is the engineer's email?"
-        },
-        {
-            type: "input",
-            name: "engineerGithub",
-            message: "What is the engineer's GitHub username?"
-        }
-    ]). then(function(data){
-        const engineer = new Engineer(data.engineerName, data.engineerId, data.engineerEmail, data.engineerGithub);
-        teamMembers.push(engineer);
-        emptyId.push(data.engineerId);
-        team();
-    });
-};
-
-function intern() {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "internName",
-            message: "What is the intern's name?"
-        },
-        {
-            type: "input",
-            name: "internId",
-            message: "What is the intern's ID?"
-        },
-        {
-            type: "input",
-            name: "internEmail",
-            message: "What is the intern's email?"
-        },
-        {
-            type: "input",
-            name: "internSchool",
-            message: "What is the intern's school?"
-        }
-    ]). then(function(data){
-        const intern = new Intern(data.internName, data.internId, data.internEmail, data.internSchool);
-        teamMembers.push(intern);
-        emptyId.push(data.internId);
-        team();
-    });
-};
-
-function outputTeam() {
-    if (!fs.existsSync(OUTPUT_DIR)) {
-        fs.mkdirSync(OUTPUT_DIR)
-    }
-    fs.writeFileSync(outputPath, render(teamMembers), "utf-8");
+function init() {
+    console.log("\x1b[37m\x1b[1m","***Starting Template Engine, Answer the Following Questions***");
+    getTeamInfo()
+    .then(value =>  render(value))
+    .then(htmlValue => writeToFile(htmlValue));
 }
 
-manager();
+function getTeamInfo() {
+    return new Promise(function (resolve, reject) {
+        let role = "";
+
+        const roleQuestion = {
+            type: "list",
+            message: "Choose the Team Member Role:",
+            name: "role",
+            choices: [
+                { name: "Intern", value: "Intern"},
+                { name: "Engineer", value: "Engineer"},
+                { name: "Manager", value: "Manager"},
+            ]
+        };
+
+        let questionsResponse;
+        
+        if(hasManager) {
+            questionsResponse = inquirer
+            .prompt(roleQuestion)
+            .then(response => {
+                role = response.role;
+                return inquirer.prompt(getRoleBasedQuestions(role));
+            });
+        }
+        else {
+            console.log("\x1b[33m\x1b[1m", "**It Seems Your Team is Missing a Manager, Let's Start Adding One!**")
+            role = "Manager";
+            questionsResponse = inquirer.prompt(getRoleBasedQuestions(role));
+            hasManager = true;
+        }
+
+        questionsResponse
+        .then(roleBasedResponse => {
+            teamMembers.push(getTeamMember(role, roleBasedResponse));
+
+            const addAnotherQuestion = {
+                type: "list",
+                message: "Would You Like to Add Another Team Member?",
+                name: "addMore",
+                choices: [
+                    { name: "Yes", value: "Yes"},
+                    { name: "No", value: "No"},
+                ]
+            }
+
+            return inquirer.prompt(addAnotherQuestion);      
+        })
+        .then(response => {
+            switch(response.addMore) {
+                case "Yes":
+                    return getTeamInfo().then(value => resolve(value));
+                case "No":
+                    return resolve(teamMembers);
+            }
+        });
+
+        function getRoleBasedQuestions(role) {
+            const idMessage = `Enter the ${role}'s ID`;
+            const nameMessage = `Enter the ${role}'s Name`;
+            const emailMessage = `Enter the ${role}'s Email Address`;
+
+            const baseQuestions = [
+                {
+                    type: "input",
+                    message: idMessage,
+                    name: "id",
+                    validate: async input => {
+
+                        if(!input || input.trim().length == 0)
+                            return 'ID for Team Member Must be Provided'
+
+                        if(isNaN(input))
+                            return 'ID Must be a Numeric Value';
+        
+                        if(input < 0)
+                            return 'ID Must be Greater or Equal 0'
+
+                        if(ids.indexOf(input) >= 0)
+                            return 'ID has Already been Given to Another Team Member'
+
+                        ids.push(input);
+                        return true;
+                    }
+                },
+                {
+                    type: "input",
+                    message: nameMessage,
+                    name: "name",
+                    validate: async input => {
+
+                        if(!input || input.trim().length == 0)
+                            return 'Name for Team Member Must be Provided'
+        
+                        return true;
+                    }
+                },
+                {
+                    type: "input",
+                    message: emailMessage,
+                    name: "email",
+                    validate: async input => {
+                        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                        if(!re.test(input.toLowerCase()))
+                            return 'Email Should be a Valid Email Address'
+        
+                        return true;
+                    }
+                },
+            ];
+
+            switch(role) {
+                case "Intern":
+                    return [
+                        ...baseQuestions,
+                        {
+                            type: "input",
+                            message: "Enter the Intern's School",
+                            name: "school",
+                            validate: async input => {
+
+                                if(!input || input.trim().length == 0)
+                                    return 'School for Intern Must be Provided'
+                
+                                return true;
+                            }
+                        }
+                    ];
+                case "Engineer":
+                    return [
+                        ...baseQuestions, 
+                        {
+                            type: "input",
+                            message: "Enter the Engineer's GitHub",
+                            name: "github",
+                            validate: async input => {
+
+                                if(!input || input.trim().length == 0)
+                                    return 'GitHub Username for Engineer Must be Provided'
+                
+                                return true;
+                            }
+                        }
+                    ];
+                case "Manager":
+                    return [
+                        ...baseQuestions,
+                        {
+                            type: "input",
+                            message: "Enter the Manager's Office Number",
+                            name: "officeNumber",
+                            validate: async input => {
+
+                                if(!input || input.trim().length == 0)
+                                    return 'Office Number for Team Member Must be Provided'
+        
+                                if(isNaN(input))
+                                    return 'Office Number Must be a Numeric Value';
+                
+                                if(input < 0)
+                                    return 'Office Number Must be Greater or Equal 0'
+                
+                                return true;
+                            }
+                        }
+                    ];
+                default:
+                    reject(Error(`Undefined Role: ${role} Selected, Please Send Stack Trace and Create Issue at: https://github.com/SCastanedaMunoz/Template-Engine/issues`));
+            }
+        }
+
+        function getTeamMember(role, values) {
+            switch(role) {
+                case "Intern":
+                    return new Intern(values.name, values.id, values.email, values.school);
+                case "Engineer":
+                    return new Engineer(values.name, values.id, values.email, values.github);
+                case "Manager":
+                    return new Manager(values.name, values.id, values.email, values.officeNumber);
+                default:
+                    reject(Error(`Undefined Role: ${role} Selected, With Response: ${JSON.stringify(values)} Please Send Stack Trace and Create Issue at: https://github.com/SCastanedaMunoz/Template-Engine/issues`));
+            }
+        }
+    });
+}
+
+function writeToFile(data) {
+    if (!fs.existsSync(OUTPUT_DIR)) {
+        fs.mkdir(OUTPUT_DIR, err => {
+            if (err) {
+                throw Error(err);
+            }
+        });
+    }
+
+    fs.copyFile("./templates/style.css", path.join(OUTPUT_DIR, "style.css"), err => {
+        if (err) {
+            throw Error(err);
+        }
+    });
+
+    fs.writeFile(outputPath, data, "utf-8", err => {
+        if (err) {
+            throw Error(err);
+        }
+        console.log("\x1b[32m\x1b[1m", `***Team Templated saved at ${outputPath}***`);
+    });
+}

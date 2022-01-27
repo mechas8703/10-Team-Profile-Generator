@@ -1,29 +1,31 @@
 {
   "name": "10-team-profile-generator",
   "version": "1.0.0",
-  "description": "![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg) ![GitHub license](https://img.shields.io/badge/made%20by-Maria%20Cardona-brightgreen)",
+  "description": "Team Profile Generator",
   "main": "app.js",
   "directories": {
     "lib": "lib",
     "test": "test"
   },
   "scripts": {
-    "test": ""
+    "start": "app.js",
+    "test": "jest --verbose test/*"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mechas8703/10-Team-Profile-Generator.git"
   },
-  "author": "Maria",
+  "author": "Maria Cardona",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/mechas8703/10-Team-Profile-Generator/issues"
   },
   "homepage": "https://github.com/mechas8703/10-Team-Profile-Generator#readme",
   "dependencies": {
-    "axios": "^0.25.0"
+    "express": "^4.17.2",
+    "inquirer": "^8.2.0"
   },
   "devDependencies": {
-    "eslint": "^6.0.0"
+    "jest": "^27.4.7"
   }
 }
