@@ -50,5 +50,7 @@ The user will be prompted for their GitHub username and other information.
 ### App working example
 
 [Video Link](https://onedrive.live.com/?cid=D0B674936F5AF566&id=D0B674936F5AF566%211299&parId=D0B674936F5AF566%211291&o=OneUp)
-[Foto1](Capture1.PNG)
-[Foto1](Capture2.PNG)
+
+[Foto1](./capture1.PNG)
+
+[Foto2](./capture2.PNG)
